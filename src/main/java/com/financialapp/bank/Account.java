@@ -1,112 +1,52 @@
 package com.financialapp.bank;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Currency;
-import java.util.Objects;
-import java.util.UUID;
 
-public final class Account {
-    private final UUID id;
-    private final UUID customerId;
+public class Account {
+    private final int accountNumber;
+    private final String customerName;
     private final AccountType type;
-    private final Currency currency;
-    private final Instant openedAt;
     private BigDecimal balance;
-    private AccountStatus status;
 
-    public Account(
-            UUID id,
-            UUID customerId,
-            AccountType type,
-            Currency currency,
-            BigDecimal openingBalance,
-            Instant openedAt
-    ) {
-        this.id = Objects.requireNonNull(id, "id");
-        this.customerId = Objects.requireNonNull(customerId, "customerId");
-        this.type = Objects.requireNonNull(type, "type");
-        this.currency = Objects.requireNonNull(currency, "currency");
-        this.balance = requireNonNegative(openingBalance, "openingBalance");
-        this.openedAt = Objects.requireNonNull(openedAt, "openedAt");
-        this.status = AccountStatus.ACTIVE;
+    public Account(int accountNumber, String customerName, AccountType type, BigDecimal balance) {
+        this.accountNumber = accountNumber;
+        this.customerName = customerName;
+        this.type = type;
+        this.balance = balance;
     }
 
-    public UUID id() {
-        return id;
+    public int getAccountNumber() {
+        return accountNumber;
     }
 
-    public UUID customerId() {
-        return customerId;
-    }
-
-    public AccountType type() {
-        return type;
-    }
-
-    public Currency currency() {
-        return currency;
-    }
-
-    public BigDecimal balance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public Instant openedAt() {
-        return openedAt;
+    public void deposit(BigDecimal amount) {
+        balance = balance.add(amount);
     }
 
-    public AccountStatus status() {
-        return status;
-    }
-
-    void debit(BigDecimal amount) {
-        requireActive();
-        BigDecimal value = requirePositive(amount, "amount");
-        if (balance.compareTo(value) < 0) {
-            throw new IllegalStateException("Insufficient funds");
+    public boolean withdraw(BigDecimal amount) {
+        if (balance.compareTo(amount) >= 0) {
+            balance = balance.subtract(amount);
+            return true;
         }
-        balance = balance.subtract(value);
-    }
-
-    void credit(BigDecimal amount) {
-        requireActive();
-        balance = balance.add(requirePositive(amount, "amount"));
-    }
-
-    void setStatus(AccountStatus status) {
-        this.status = Objects.requireNonNull(status, "status");
-    }
-
-    void requireActive() {
-        if (status != AccountStatus.ACTIVE) {
-            throw new IllegalStateException("Account is not active");
-        }
-    }
-
-    private static BigDecimal requirePositive(BigDecimal value, String field) {
-        Objects.requireNonNull(value, field);
-        if (value.signum() <= 0) {
-            throw new IllegalArgumentException(field + " must be positive");
-        }
-        return value;
-    }
-
-    private static BigDecimal requireNonNegative(BigDecimal value, String field) {
-        Objects.requireNonNull(value, field);
-        if (value.signum() < 0) {
-            throw new IllegalArgumentException(field + " must not be negative");
-        }
-        return value;
+        return false;
     }
 
     @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof Account account && id.equals(account.id);
+        return other instanceof Account account && accountNumber == account.accountNumber;
     }
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return Integer.hashCode(accountNumber);
+    }
+
+    @Override
+    public String toString() {
+        return accountNumber + " | " + customerName + " | " + type + " | Balance: " + balance;
     }
 }
